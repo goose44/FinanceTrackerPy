@@ -1,17 +1,25 @@
 "My personal finance tracker"
 
-print("Is the program running?")
-
 def finance ():
 
     print("Welcome to my finance tracker!")
 
-    balance = float(input("Enter your balance: "))
+    startingBal = float(input("Enter your balance: "))
     income = float(input("Enter your monthly income: "))
-    expense = float(input("Enter your monthly expense: "))
 
+    expenses = []
+    categories = ["Food", "Gas", "Living"]
+
+    for i in categories:
+        expense = float(input(f"Enter your monthly {i} expense: "))
+        expenses.append(expense)
+
+    total = sum(expenses)
+    endBal = startingBal + income - total
+
+    print("Starting Balance:", startingBal)
     print("Income:", income)
-    print("Expense:", expense)
-    print("Remaining Balance:", balance)
+    print("Total Expense:", total)
+    print("Remaining Balance:", endBal)
 
 finance()
