@@ -7,19 +7,26 @@ def finance ():
     startingBal = float(input("Enter your balance: "))
     income = float(input("Enter your monthly income: "))
 
-    expenses = []
-    categories = ["Food", "Gas", "Living"]
+    expenses = {}
+    
+    while True:
+        category = str(input("Enter expense category (or 'done' to finish): "))
+        if category != 'done':
+            expense = float(input("Expense: "))
+            expenses[category] = expense
+        else:
+            break
 
-    for i in categories:
-        expense = float(input(f"Enter your monthly {i} expense: "))
-        expenses.append(expense)
-
-    total = sum(expenses)
+    print(expenses)
+    total = sum(expenses.values())
     endBal = startingBal + income - total
 
-    print("Starting Balance:", startingBal)
-    print("Income:", income)
-    print("Total Expense:", total)
-    print("Remaining Balance:", endBal)
+    print(f"Starting Balance: ${startingBal}")
+    print(f"Income: ${income}")
+
+    for category, amount in expenses.items():
+        print(f"{category}: ${amount}")
+
+    print(f"Ending Balance: ${endBal}")
 
 finance()
