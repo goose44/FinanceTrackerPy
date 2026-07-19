@@ -1,4 +1,5 @@
-"My personal finance tracker"
+# My personal finance tracker
+# !!!! Reminder to add comments to each of the fcns soon !!!!!
 
 import json
 import os
@@ -9,10 +10,16 @@ def save_expenses(expenses):
 
 def load_expenses():
     if os.path.exists("expenses.json"):
-
         with open("expenses.json", "r") as file:
             return json.load(file)
     return {}
+
+def get_float(prompt):
+    while True:
+        try:
+            return float(input(prompt))
+        except ValueError:
+            print("Invalid input. Please enter a number.")
 
 def menu():
     print("\n===== Personal Finance Tracker =====")
@@ -20,19 +27,16 @@ def menu():
     print("2. Add Expense")
     print("3. View Summary")
     print("4. Save & Exit")
-
     choice = input("Choose an option: ")
 
     return choice
 
 def get_starting_info():
-    starting_balance = float(input("Enter your balance: "))
-    income = float(input("Enter your monthly income: "))
-
+    starting_balance = get_float("Enter your balance: ")
+    income = get_float("Enter your monthly income: ")
     return starting_balance, income
 
 def get_expenses(expenses):
-
     while True:
         category = str(input("Enter expense category (or 'done' to finish): "))
         if category != 'done':
@@ -59,6 +63,16 @@ def display_expenses(expenses):
     for category, amount in expenses.items():
         print(f"{category}: ${amount}")
 
+def delete_expense(expenses):
+    display_expenses(expenses)
+    category = input("Enter expense to delete: ")
+    if category in expenses:
+        del expenses[category]
+        print("Expense deleted successfully.")
+    else:
+        print("Expense not found.")
+    return expenses
+
 def display_summary(starting_balance, income, expenses, total, ending_balance):
     print("\n------ Summary ------")
 
@@ -83,10 +97,13 @@ def finance ():
             expenses = get_expenses(expenses)
 
         elif choice == "3":
+            expenses = delete_expense(expenses)
+
+        elif choice == "4":
             total, ending_balance = calculate_balance(starting_balance, income, expenses)
             display_summary(starting_balance, income, expenses, total, ending_balance)
             
-        elif choice == "4":
+        elif choice == "5":
             save_expenses(expenses)
             print("Expenses saved successfully!")
             break
