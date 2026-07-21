@@ -1,8 +1,6 @@
 # My personal finance tracker
 # !!!! Reminder to add comments to each of the fcns soon !!!!!
 
-import json
-import os
 import sqlite3
 
 def create_database():
@@ -28,15 +26,43 @@ def add_expense_db(category, amount):
     connection.commit()
     connection.close()
 
-def save_expenses(expenses):
-    with open("expenses.json", "w") as file:
-        json.dump(expenses, file, indent=4)
+# dtabase testing to see if it works or no
+def view_database():
+    connection = sqlite3.connect("finance.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM expenses")
+    rows = cursor.fetchall()
+    print("\n------ Database ------")
+    for row in rows:
+        print(row)
+    connection.close()
 
-def load_expenses():
-    if os.path.exists("expenses.json"):
-        with open("expenses.json", "r") as file:
-            return json.load(file)
-    return {}
+def display_expenses():
+    connection = sqlite3.connect("finance.db")
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT id, category, amount
+        FROM expenses
+    """)
+    rows = cursor.fetchall()
+    print("\n------ Expenses ------")
+
+    if not rows:
+        print("No expenses found.")
+    else:
+        for expense_id, category, amount in rows:
+            print(f"{expense_id}. {category}: ${amount}")
+    connection.close()
+
+def add_expense():
+    category = input("Enter expense category: ")
+    amount = get_float("Expense: ")
+    add_expense_db(category, amount)
+    print("Expense added successfully!")
+
+#def save_expenses(expenses):
+    #with open("expenses.json", "w") as file:
+        #json.dump(expenses, file, indent=4)
 
 def get_float(prompt):
     while True:
@@ -60,59 +86,52 @@ def get_starting_info():
     income = get_float("Enter your monthly income: ")
     return starting_balance, income
 
-def get_expenses(expenses):
-    while True:
-        category = str(input("Enter expense category (or 'done' to finish): "))
-        if category != 'done':
-            expense = float(input("Expense: "))
-            expenses[category] = expense
-        else:
-            break
+def calculate_balance():
+    connection = sqlite3.connect("finance.db")
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT SUM(amount)
+        FROM expenses
+    """)
+    total = cursor.fetchone()[0]
+    connection.close()
+    return total or 0
 
-    return expenses
+def delete_expense():
+    display_expenses()
+    expense_id = int(input("\nEnter expense ID to delete: "))
+    connection = sqlite3.connect("finance.db")
+    cursor = connection.cursor()
+    cursor.execute(
+        "DELETE FROM expenses WHERE id = ?",
+        (expense_id,)
+    )
+    connection.commit()
+    connection.close()
+    print("Expense deleted successfully!")
 
-def calculate_balance(starting_balance, income, expenses):
-    total = sum(expenses.values())
+def edit_expense():
+    display_expenses()
+    expense_id = int(input("\nEnter expense ID to edit: "))
+    amount = get_float("Enter the new amount: ")
+    connection = sqlite3.connect("finance.db")
+    cursor = connection.cursor()
+    cursor.execute(
+        "UPDATE expenses SET amount = ? WHERE id = ?",
+        (amount, expense_id)
+    )
+    connection.commit()
+    connection.close()
+    print("Expense updated successfully!")
+
+def display_summary(starting_balance, income):
+    total = calculate_balance()
     ending_balance = starting_balance + income - total
 
-    return total, ending_balance
-
-def display_expenses(expenses):
-    print("\n------ Expenses ------")
-
-    if not expenses:
-        print("No expenses recorded.")
-        return
-
-    for category, amount in expenses.items():
-        print(f"{category}: ${amount}")
-
-def delete_expense(expenses):
-    display_expenses(expenses)
-    category = input("Enter expense to delete: ")
-    if category in expenses:
-        del expenses[category]
-        print("Expense deleted successfully.")
-    else:
-        print("Expense not found.")
-    return expenses
-
-def edit_expense(expenses):
-    category = input("Enter the expense you wish to edit: ")
-    if category in expenses:
-        new_expense = get_float("Enter the new amount: ")
-        expenses[category] = new_expense
-        print(f"{category} updated sucessfully!")
-    else:
-        print("Expense category not found.")
-    return expenses
-
-def display_summary(starting_balance, income, expenses, total, ending_balance):
     print("\n------ Summary ------")
-
     print(f"Starting Balance: ${starting_balance}")
     print(f"Income: ${income}")
-    print(f"\nTotal Expenses: ${total}")
+    print(f"Total Expenses: ${total}")
     print(f"Remaining Balance: ${ending_balance}")
 
 def finance ():
@@ -120,29 +139,26 @@ def finance ():
     create_database()
 
     starting_balance, income = get_starting_info()
-    expenses = load_expenses()
-    "expenses = get_expenses(expenses)"
     while True:
         choice = menu()
 
         if choice == "1":
-            display_expenses(expenses)
+            display_expenses()
 
         elif choice == "2":
-            expenses = get_expenses(expenses)
+            add_expense()
         
         elif choice == "3":
-            expenses = edit_expense(expenses)
+            edit_expense()
 
         elif choice == "4":
-            expenses = delete_expense(expenses)
+            delete_expense()
 
         elif choice == "5":
-            total, ending_balance = calculate_balance(starting_balance, income, expenses)
-            display_summary(starting_balance, income, expenses, total, ending_balance)
+            display_summary(starting_balance, income)
             
         elif choice == "6":
-            save_expenses(expenses)
+            view_database()
             print("Expenses saved successfully!")
             break
         else:
